@@ -310,9 +310,146 @@ class NotionAPI:
             更新结果
         """
         try:
-            # 复用添加逻辑的属性构建
-            add_result = self.add_movie_to_database(movie)
-            return add_result
+            # 转换状态为中文
+            status_mapping = {
+                "watched": "已看",
+                "wish": "想看",
+                "do": "在看"
+            }
+            
+            # 构建页面属性
+            properties = {
+                "电影名称": {
+                    "title": [
+                        {
+                            "text": {
+                                "content": movie.title
+                            }
+                        }
+                    ]
+                },
+                "原始名称": {
+                    "rich_text": [
+                        {
+                            "text": {
+                                "content": movie.original_title
+                            }
+                        }
+                    ]
+                },
+                "豆瓣ID": {
+                    "rich_text": [
+                        {
+                            "text": {
+                                "content": movie.id
+                            }
+                        }
+                    ]
+                },
+                "状态": {
+                    "select": {
+                        "name": status_mapping.get(movie.status, "已看")
+                    }
+                },
+                "评分": {
+                    "number": movie.rating
+                },
+                "上映年份": {
+                    "number": int(movie.year) if movie.year.isdigit() else None
+                },
+                "类型": {
+                    "multi_select": [
+                        {"name": genre}
+                        for genre in movie.genres
+                    ]
+                },
+                "导演": {
+                    "rich_text": [
+                        {
+                            "text": {
+                                "content": ", ".join(movie.directors)
+                            }
+                        }
+                    ]
+                },
+                "演员": {
+                    "rich_text": [
+                        {
+                            "text": {
+                                "content": ", ".join(movie.casts)
+                            }
+                        }
+                    ]
+                },
+                "地区": {
+                    "multi_select": [
+                        {"name": region}
+                        for region in movie.regions
+                    ]
+                },
+                "时长": {
+                    "number": int(movie.duration) if isinstance(movie.duration, (int, str)) and str(movie.duration).isdigit() else None
+                },
+                "豆瓣链接": {
+                    "url": movie.url
+                },
+                "简介": {
+                    "rich_text": [
+                        {
+                            "text": {
+                                "content": movie.summary
+                            }
+                        }
+                    ]
+                }
+            }
+            
+            # 处理可选属性
+            if movie.release_date:
+                properties["上映日期"] = {
+                    "date": {
+                        "start": movie.release_date
+                    }
+                }
+            
+            if movie.comment:
+                properties["用户评论"] = {
+                    "rich_text": [
+                        {
+                            "text": {
+                                "content": movie.comment
+                            }
+                        }
+                    ]
+                }
+            
+            if movie.rating_date:
+                properties["评分日期"] = {
+                    "date": {
+                        "start": movie.rating_date
+                    }
+                }
+            
+            if movie.poster_url:
+                properties["海报"] = {
+                    "files": [
+                        {
+                            "type": "external",
+                            "name": f"{movie.title}海报",
+                            "external": {
+                                "url": movie.poster_url
+                            }
+                        }
+                    ]
+                }
+            
+            # 更新页面
+            page = self.notion.pages.update(
+                page_id=page_id,
+                properties=properties
+            )
+            
+            return page
             
         except Exception as e:
             print(f"更新电影到Notion数据库失败: {e}")
