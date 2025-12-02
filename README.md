@@ -1,0 +1,238 @@
+# 豆瓣电影同步到Notion
+
+一个用于将豆瓣电影信息一键同步到Notion笔记平台的工具，支持通过GitHub Actions定时同步用户的豆瓣电影已看、想看等电影详情信息。
+
+## 功能特性
+
+- 🎬 支持同步豆瓣电影的已看、想看、在看列表
+- 🔄 支持全量同步和增量同步
+- 📊 详细的同步日志和统计
+- ⏰ 支持GitHub Actions定时执行
+- 🎨 自动创建Notion数据库，包含丰富的电影信息
+- 🔒 安全的环境变量管理
+- 📱 支持多平台运行
+
+## 技术栈
+
+- **开发语言**: Python 3.8+
+- **主要依赖**:
+  - requests (HTTP请求)
+  - python-dotenv (环境变量管理)
+  - notion-client (Notion API客户端)
+  - beautifulsoup4 (HTML解析，备用方案)
+- **部署方式**: GitHub Actions
+
+## 项目结构
+
+```
+douban2notion/
+├── src/
+│   ├── __init__.py
+│   ├── douban_api.py      # 豆瓣API调用模块
+│   ├── notion_api.py      # Notion API调用模块
+│   ├── sync_service.py    # 同步服务核心逻辑
+│   ├── models.py          # 数据模型定义
+│   └── config.py          # 配置管理
+├── .env.example           # 环境变量示例
+├── .github/
+│   └── workflows/
+│       └── sync.yml       # GitHub Actions工作流配置
+├── requirements.txt       # 依赖列表
+├── main.py                # 主程序入口
+└── README.md              # 项目说明文档
+```
+
+## 快速开始
+
+### 1. 克隆项目
+
+```bash
+git clone https://github.com/yourusername/douban2notion.git
+cd douban2notion
+```
+
+### 2. 配置虚拟环境
+
+```bash
+# 创建虚拟环境
+python -m venv venv
+
+# 激活虚拟环境
+# Windows
+venv\Scripts\activate
+# Linux/Mac
+source venv/bin/activate
+
+# 安装依赖
+pip install -r requirements.txt
+```
+
+### 3. 配置环境变量
+
+复制 `.env.example` 文件为 `.env`，并填写相应的配置信息：
+
+```bash
+cp .env.example .env
+```
+
+编辑 `.env` 文件，填写以下信息：
+
+```
+# 豆瓣API配置
+DOUBAN_USER_ID=your_douban_user_id
+DOUBAN_API_KEY=your_douban_api_key
+
+# Notion API配置
+NOTION_API_KEY=your_notion_api_key
+NOTION_DATABASE_ID=your_notion_database_id
+
+# 同步配置
+SYNC_STATUS=watched  # 可选值：watched(已看), wish(想看), do(在看)
+```
+
+### 4. 运行同步脚本
+
+```bash
+python main.py
+```
+
+## 配置说明
+
+### 1. 豆瓣API配置
+
+- **DOUBAN_USER_ID**: 豆瓣用户ID，可以从豆瓣个人主页URL中获取
+- **DOUBAN_API_KEY**: 豆瓣开放平台的API密钥，需要注册开发者账号并创建应用获取
+
+### 2. Notion API配置
+
+- **NOTION_API_KEY**: Notion集成密钥，需要在Notion集成页面创建
+- **NOTION_DATABASE_ID**: Notion数据库ID，可以从数据库URL中获取
+
+### 3. 同步配置
+
+- **SYNC_STATUS**: 同步状态，可选值：
+  - `watched`: 已看电影
+  - `wish`: 想看电影
+  - `do`: 在看电影
+
+## GitHub Actions配置
+
+### 1. 添加Secrets
+
+在GitHub仓库的 `Settings > Secrets and variables > Actions` 中添加以下Secrets：
+
+- **DOUBAN_USER_ID**: 豆瓣用户ID
+- **DOUBAN_API_KEY**: 豆瓣API密钥
+- **NOTION_API_KEY**: Notion集成密钥
+- **NOTION_DATABASE_ID**: Notion数据库ID
+
+### 2. 手动触发同步
+
+在GitHub仓库的 `Actions > 豆瓣电影同步到Notion > Run workflow` 中可以手动触发同步，并选择同步状态。
+
+### 3. 定时同步
+
+工作流默认每天凌晨2点（北京时间）自动执行同步。
+
+## Notion数据库字段说明
+
+| 字段名称 | 字段类型 | 描述         |
+| ---- | ---- | ---------- |
+| 电影名称 | 标题   | 电影中文名称     |
+| 原始名称 | 文本   | 电影原始名称     |
+| 豆瓣ID | 文本   | 豆瓣电影唯一标识   |
+| 状态   | 选择   | 已看/想看/在看   |
+| 评分   | 数字   | 用户评分(1-10) |
+| 上映年份 | 数字   | 电影上映年份     |
+| 类型   | 多选   | 电影类型       |
+| 导演   | 文本   | 电影导演       |
+| 演员   | 文本   | 主要演员       |
+| 地区   | 多选   | 制作地区       |
+| 上映日期 | 日期   | 上映日期       |
+| 时长   | 数字   | 电影时长(分钟)   |
+| 豆瓣链接 | URL  | 豆瓣电影页面链接   |
+| 海报   | 文件   | 电影海报图片     |
+| 简介   | 文本   | 电影简介       |
+| 用户评论 | 文本   | 用户评论       |
+| 评分日期 | 日期   | 用户评分日期     |
+
+## 注意事项
+
+1. **API限制**: 豆瓣API有访问频率限制，请合理设置同步频率
+2. **数据隐私**: 确保环境变量中的密钥安全，不要泄露给他人
+3. **网络连接**: 确保运行环境有稳定的网络连接
+4. **Notion权限**: 确保Notion集成有足够的权限访问和修改数据库
+5. **首次同步**: 首次同步可能需要较长时间，取决于电影数量
+
+## 常见问题
+
+### Q: 如何获取豆瓣用户ID？
+
+A: 打开豆瓣个人主页，URL中的数字部分即为用户ID，例如：`https://www.douban.com/people/123456789/` 中的 `123456789`。
+
+### Q: 如何获取Notion集成密钥？
+
+A: 访问 [Notion集成页面](https://www.notion.so/my-integrations)，创建新集成并获取密钥。
+
+### Q: 如何获取Notion数据库ID？
+
+A: 打开Notion数据库页面，点击右上角的 `...` > `Copy link to view`，URL中 `?v=` 前面的部分即为数据库ID。
+
+### Q: 同步失败怎么办？
+
+A: 检查日志中的错误信息，常见问题包括：
+
+- 环境变量配置错误
+- API密钥无效
+- 网络连接问题
+- Notion数据库权限不足
+
+## 开发说明
+
+### 安装依赖
+
+```bash
+pip install -r requirements.txt
+```
+
+### 运行测试
+
+```bash
+# 目前暂无测试用例
+```
+
+### 代码结构
+
+- **src/douban_api.py**: 豆瓣API调用模块
+- **src/notion_api.py**: Notion API调用模块
+- **src/sync_service.py**: 同步服务核心逻辑
+- **src/models.py**: 数据模型定义
+- **src/config.py**: 配置管理
+- **main.py**: 主程序入口
+
+## 贡献指南
+
+欢迎提交Issue和Pull Request！
+
+## 更新日志
+
+详情请查看 [CHANGELOG.md](./CHANGELOG.md) 文件。
+# 目前暂无测试用例
+```
+
+### 代码结构
+
+- **src/douban_api.py**: 豆瓣API调用模块，负责获取用户电影信息
+- **src/notion_api.py**: Notion API调用模块，负责管理Notion数据库和同步数据
+- **src/sync_service.py**: 同步服务核心逻辑，协调豆瓣和Notion之间的数据同步
+- **src/models.py**: 数据模型定义，定义电影数据结构
+- **src/config.py**: 配置管理，加载和验证环境变量
+- **main.py**: 主程序入口，启动同步服务
+
+## 贡献指南
+
+欢迎提交Issue和Pull Request！
+
+## 更新日志
+
+详情请查看 [CHANGELOG.md](./CHANGELOG.md) 文件。
