@@ -55,6 +55,9 @@ class SyncService:
         """
         logger.info("开始执行电影同步...")
         
+        # 记录同步配置
+        logger.info(f"同步配置: 状态={self.sync_status}, 字段={', '.join(config.selected_fields)}")
+        
         # 获取豆瓣电影列表
         douban_movies = self.get_douban_movies()
         

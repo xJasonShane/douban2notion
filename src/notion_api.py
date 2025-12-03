@@ -11,6 +11,77 @@ class NotionAPI:
         self.notion = Client(auth=config.notion_api_key)
         self.database_id = config.notion_database_id
         
+        # 定义所有可用的数据库属性模板
+        self.all_properties = {
+            "电影名称": {
+                "title": {}
+            },
+            "原始名称": {
+                "rich_text": {}
+            },
+            "豆瓣ID": {
+                "rich_text": {}
+            },
+            "状态": {
+                "select": {
+                    "options": [
+                        {"name": "已看", "color": "green"},
+                        {"name": "想看", "color": "blue"},
+                        {"name": "在看", "color": "yellow"}
+                    ]
+                }
+            },
+            "评分": {
+                "number": {
+                    "format": "number"
+                }
+            },
+            "上映年份": {
+                "number": {
+                    "format": "number"
+                }
+            },
+            "类型": {
+                "multi_select": {
+                    "options": []
+                }
+            },
+            "导演": {
+                "rich_text": {}
+            },
+            "演员": {
+                "rich_text": {}
+            },
+            "地区": {
+                "multi_select": {
+                    "options": []
+                }
+            },
+            "上映日期": {
+                "date": {}
+            },
+            "时长": {
+                "number": {
+                    "format": "number"
+                }
+            },
+            "豆瓣链接": {
+                "url": {}
+            },
+            "海报": {
+                "files": {}
+            },
+            "简介": {
+                "rich_text": {}
+            },
+            "用户评论": {
+                "rich_text": {}
+            },
+            "评分日期": {
+                "date": {}
+            }
+        }
+    
     def create_database(self, parent_page_id: str, database_name: str = "豆瓣电影") -> str:
         """
         创建Notion数据库
@@ -23,76 +94,11 @@ class NotionAPI:
             数据库ID
         """
         try:
-            # 定义数据库属性
-            properties = {
-                "电影名称": {
-                    "title": {}
-                },
-                "原始名称": {
-                    "rich_text": {}
-                },
-                "豆瓣ID": {
-                    "rich_text": {}
-                },
-                "状态": {
-                    "select": {
-                        "options": [
-                            {"name": "已看", "color": "green"},
-                            {"name": "想看", "color": "blue"},
-                            {"name": "在看", "color": "yellow"}
-                        ]
-                    }
-                },
-                "评分": {
-                    "number": {
-                        "format": "number"
-                    }
-                },
-                "上映年份": {
-                    "number": {
-                        "format": "number"
-                    }
-                },
-                "类型": {
-                    "multi_select": {
-                        "options": []
-                    }
-                },
-                "导演": {
-                    "rich_text": {}
-                },
-                "演员": {
-                    "rich_text": {}
-                },
-                "地区": {
-                    "multi_select": {
-                        "options": []
-                    }
-                },
-                "上映日期": {
-                    "date": {}
-                },
-                "时长": {
-                    "number": {
-                        "format": "number"
-                    }
-                },
-                "豆瓣链接": {
-                    "url": {}
-                },
-                "海报": {
-                    "files": {}
-                },
-                "简介": {
-                    "rich_text": {}
-                },
-                "用户评论": {
-                    "rich_text": {}
-                },
-                "评分日期": {
-                    "date": {}
-                }
-            }
+            # 根据配置的字段动态生成属性
+            properties = {}
+            for field in config.selected_fields:
+                if field in self.all_properties:
+                    properties[field] = self.all_properties[field]
             
             # 创建数据库
             database = self.notion.databases.create(
@@ -101,11 +107,54 @@ class NotionAPI:
                 properties=properties
             )
             
+            # 设置画廊视图
+            self.set_gallery_view(database["id"])
+            
             return database["id"]
             
         except Exception as e:
             print(f"创建Notion数据库失败: {e}")
             raise
+    
+    def set_gallery_view(self, database_id: str):
+        """
+        设置Notion数据库的画廊视图
+        
+        Args:
+            database_id: 数据库ID
+        """
+        try:
+            # 获取数据库的当前视图
+            database = self.notion.databases.retrieve(database_id=database_id)
+            
+            # 创建新的画廊视图
+            gallery_view = self.notion.request(
+                path="databases/{}/views".format(database_id),
+                method="POST",
+                body={
+                    "parent": {"type": "database_id", "database_id": database_id},
+                    "title": [{"type": "text", "text": {"content": "画廊视图"}}],
+                    "type": "gallery",
+                    "gallery": {
+                        "properties": [],
+                        "cover": {
+                            "type": "property",
+                            "property": "海报"
+                        },
+                        "page_size": 30
+                    }
+                }
+            )
+            
+            # 将画廊视图设置为默认视图
+            # 注意：Notion API 目前不支持直接设置默认视图
+            # 可以考虑删除其他视图，只保留画廊视图
+            # 或者让用户手动设置默认视图
+            
+        except Exception as e:
+            print(f"设置画廊视图失败: {e}")
+            # 非致命错误，继续执行
+            pass
     
     def query_database(self, filter: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """
@@ -123,10 +172,14 @@ class NotionAPI:
             
             # 处理分页
             while True:
-                response = self.notion.databases.query(
-                    database_id=self.database_id,
-                    filter=filter,
-                    start_cursor=start_cursor
+                # 使用正确的API调用方式
+                response = self.notion.request(
+                    path="databases/{}/query".format(self.database_id),
+                    method="POST",
+                    body={
+                        "filter": filter,
+                        "start_cursor": start_cursor
+                    }
                 )
                 
                 results.extend(response.get("results", []))
@@ -161,8 +214,11 @@ class NotionAPI:
             }
             
             # 构建页面属性
-            properties = {
-                "电影名称": {
+            properties = {}
+            
+            # 根据配置的字段动态生成属性
+            if "电影名称" in config.selected_fields:
+                properties["电影名称"] = {
                     "title": [
                         {
                             "text": {
@@ -170,8 +226,10 @@ class NotionAPI:
                             }
                         }
                     ]
-                },
-                "原始名称": {
+                }
+            
+            if "原始名称" in config.selected_fields:
+                properties["原始名称"] = {
                     "rich_text": [
                         {
                             "text": {
@@ -179,8 +237,10 @@ class NotionAPI:
                             }
                         }
                     ]
-                },
-                "豆瓣ID": {
+                }
+            
+            if "豆瓣ID" in config.selected_fields:
+                properties["豆瓣ID"] = {
                     "rich_text": [
                         {
                             "text": {
@@ -188,25 +248,35 @@ class NotionAPI:
                             }
                         }
                     ]
-                },
-                "状态": {
+                }
+            
+            if "状态" in config.selected_fields:
+                properties["状态"] = {
                     "select": {
                         "name": status_mapping.get(movie.status, "已看")
                     }
-                },
-                "评分": {
+                }
+            
+            if "评分" in config.selected_fields:
+                properties["评分"] = {
                     "number": movie.rating
-                },
-                "上映年份": {
+                }
+            
+            if "上映年份" in config.selected_fields:
+                properties["上映年份"] = {
                     "number": int(movie.year) if movie.year.isdigit() else None
-                },
-                "类型": {
+                }
+            
+            if "类型" in config.selected_fields:
+                properties["类型"] = {
                     "multi_select": [
                         {"name": genre}
                         for genre in movie.genres
                     ]
-                },
-                "导演": {
+                }
+            
+            if "导演" in config.selected_fields:
+                properties["导演"] = {
                     "rich_text": [
                         {
                             "text": {
@@ -214,8 +284,10 @@ class NotionAPI:
                             }
                         }
                     ]
-                },
-                "演员": {
+                }
+            
+            if "演员" in config.selected_fields:
+                properties["演员"] = {
                     "rich_text": [
                         {
                             "text": {
@@ -223,20 +295,28 @@ class NotionAPI:
                             }
                         }
                     ]
-                },
-                "地区": {
+                }
+            
+            if "地区" in config.selected_fields:
+                properties["地区"] = {
                     "multi_select": [
                         {"name": region}
                         for region in movie.regions
                     ]
-                },
-                "时长": {
+                }
+            
+            if "时长" in config.selected_fields:
+                properties["时长"] = {
                     "number": int(movie.duration) if isinstance(movie.duration, (int, str)) and str(movie.duration).isdigit() else None
-                },
-                "豆瓣链接": {
+                }
+            
+            if "豆瓣链接" in config.selected_fields:
+                properties["豆瓣链接"] = {
                     "url": movie.url
-                },
-                "简介": {
+                }
+            
+            if "简介" in config.selected_fields:
+                properties["简介"] = {
                     "rich_text": [
                         {
                             "text": {
@@ -245,17 +325,16 @@ class NotionAPI:
                         }
                     ]
                 }
-            }
             
             # 处理可选属性
-            if movie.release_date:
+            if "上映日期" in config.selected_fields and movie.release_date:
                 properties["上映日期"] = {
                     "date": {
                         "start": movie.release_date
                     }
                 }
             
-            if movie.comment:
+            if "用户评论" in config.selected_fields and movie.comment:
                 properties["用户评论"] = {
                     "rich_text": [
                         {
@@ -266,14 +345,14 @@ class NotionAPI:
                     ]
                 }
             
-            if movie.rating_date:
+            if "评分日期" in config.selected_fields and movie.rating_date:
                 properties["评分日期"] = {
                     "date": {
                         "start": movie.rating_date
                     }
                 }
             
-            if movie.poster_url:
+            if "海报" in config.selected_fields and movie.poster_url:
                 properties["海报"] = {
                     "files": [
                         {
@@ -318,8 +397,11 @@ class NotionAPI:
             }
             
             # 构建页面属性
-            properties = {
-                "电影名称": {
+            properties = {}
+            
+            # 根据配置的字段动态生成属性
+            if "电影名称" in config.selected_fields:
+                properties["电影名称"] = {
                     "title": [
                         {
                             "text": {
@@ -327,8 +409,10 @@ class NotionAPI:
                             }
                         }
                     ]
-                },
-                "原始名称": {
+                }
+            
+            if "原始名称" in config.selected_fields:
+                properties["原始名称"] = {
                     "rich_text": [
                         {
                             "text": {
@@ -336,8 +420,10 @@ class NotionAPI:
                             }
                         }
                     ]
-                },
-                "豆瓣ID": {
+                }
+            
+            if "豆瓣ID" in config.selected_fields:
+                properties["豆瓣ID"] = {
                     "rich_text": [
                         {
                             "text": {
@@ -345,25 +431,35 @@ class NotionAPI:
                             }
                         }
                     ]
-                },
-                "状态": {
+                }
+            
+            if "状态" in config.selected_fields:
+                properties["状态"] = {
                     "select": {
                         "name": status_mapping.get(movie.status, "已看")
                     }
-                },
-                "评分": {
+                }
+            
+            if "评分" in config.selected_fields:
+                properties["评分"] = {
                     "number": movie.rating
-                },
-                "上映年份": {
+                }
+            
+            if "上映年份" in config.selected_fields:
+                properties["上映年份"] = {
                     "number": int(movie.year) if movie.year.isdigit() else None
-                },
-                "类型": {
+                }
+            
+            if "类型" in config.selected_fields:
+                properties["类型"] = {
                     "multi_select": [
                         {"name": genre}
                         for genre in movie.genres
                     ]
-                },
-                "导演": {
+                }
+            
+            if "导演" in config.selected_fields:
+                properties["导演"] = {
                     "rich_text": [
                         {
                             "text": {
@@ -371,8 +467,10 @@ class NotionAPI:
                             }
                         }
                     ]
-                },
-                "演员": {
+                }
+            
+            if "演员" in config.selected_fields:
+                properties["演员"] = {
                     "rich_text": [
                         {
                             "text": {
@@ -380,20 +478,28 @@ class NotionAPI:
                             }
                         }
                     ]
-                },
-                "地区": {
+                }
+            
+            if "地区" in config.selected_fields:
+                properties["地区"] = {
                     "multi_select": [
                         {"name": region}
                         for region in movie.regions
                     ]
-                },
-                "时长": {
+                }
+            
+            if "时长" in config.selected_fields:
+                properties["时长"] = {
                     "number": int(movie.duration) if isinstance(movie.duration, (int, str)) and str(movie.duration).isdigit() else None
-                },
-                "豆瓣链接": {
+                }
+            
+            if "豆瓣链接" in config.selected_fields:
+                properties["豆瓣链接"] = {
                     "url": movie.url
-                },
-                "简介": {
+                }
+            
+            if "简介" in config.selected_fields:
+                properties["简介"] = {
                     "rich_text": [
                         {
                             "text": {
@@ -402,17 +508,16 @@ class NotionAPI:
                         }
                     ]
                 }
-            }
             
             # 处理可选属性
-            if movie.release_date:
+            if "上映日期" in config.selected_fields and movie.release_date:
                 properties["上映日期"] = {
                     "date": {
                         "start": movie.release_date
                     }
                 }
             
-            if movie.comment:
+            if "用户评论" in config.selected_fields and movie.comment:
                 properties["用户评论"] = {
                     "rich_text": [
                         {
@@ -423,14 +528,14 @@ class NotionAPI:
                     ]
                 }
             
-            if movie.rating_date:
+            if "评分日期" in config.selected_fields and movie.rating_date:
                 properties["评分日期"] = {
                     "date": {
                         "start": movie.rating_date
                     }
                 }
             
-            if movie.poster_url:
+            if "海报" in config.selected_fields and movie.poster_url:
                 properties["海报"] = {
                     "files": [
                         {
