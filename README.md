@@ -9,9 +9,9 @@
 - 📊 详细的同步日志和统计
 - ⏰ 支持GitHub Actions定时执行
 - 🎨 自动创建Notion数据库，包含丰富的电影信息
-- �️ 默认采用画廊视图展示，封面为电影海报
+- 🖼️ 默认采用画廊视图展示，封面为电影海报
 - 📋 支持用户自定义选择需要同步的字段
-- � 安全的环境变量管理
+- 🔒 安全的环境变量管理
 - 📱 支持多平台运行
 
 ## 技术栈
@@ -59,7 +59,7 @@ douban2notion/
 
 | 配置项 | 说明 | 获取方式 |
 | ------ | ---- | -------- |
-| DOUBAN_USER_ID | 豆瓣用户ID | 打开豆瓣个人主页，URL中的数字部分即为用户ID，如：`https://www.douban.com/people/123456789/` 中的 `123456789` |
+| DOUBAN_USER_ID | 豆瓣用户ID | 打开豆瓣个人主页，URL格式为 `https://www.douban.com/people/用户名/?_i=用户ID`，其中 `?_i=` 后面的字符串即为用户ID，例如：`https://www.douban.com/people/username/?_i=1234567890` 中的 `1234567890` |
 | DOUBAN_API_KEY | 豆瓣API密钥 | 注册豆瓣开放平台开发者账号，创建应用后获取 |
 | NOTION_API_KEY | Notion集成密钥 | 访问 [Notion集成页面](https://www.notion.so/my-integrations)，创建新集成并获取 |
 | NOTION_DATABASE_ID | Notion数据库ID | 打开Notion数据库页面，点击右上角 `...` > `Copy link to view`，URL中 `?v=` 前面的部分 |
@@ -71,7 +71,7 @@ douban2notion/
 
 | Secret名称 | 对应配置项 | 说明 |
 | ---------- | ---------- | ---- |
-| DOUBAN_USER_ID | 豆瓣用户ID | 豆瓣个人主页URL中的数字部分 |
+| DOUBAN_USER_ID | 豆瓣用户ID | 豆瓣个人主页URL中 `?_i=` 后面的字符串，例如：`https://www.douban.com/people/username/?_i=1234567890` 中的 `1234567890` |
 | DOUBAN_API_KEY | 豆瓣API密钥 | 豆瓣开放平台开发者账号获取 |
 | NOTION_API_KEY | Notion集成密钥 | Notion集成页面创建获取 |
 | NOTION_DATABASE_ID | Notion数据库ID | Notion数据库页面URL中获取 |
@@ -114,7 +114,7 @@ cron: '0 18 * * 1'  # UTC时间，对应北京时间每周一凌晨2点
 
 | 配置项 | 说明 | 获取方式 |
 | ------ | ---- | -------- |
-| DOUBAN_USER_ID | 豆瓣用户ID | 豆瓣个人主页URL中的数字部分，如：`https://www.douban.com/people/123456789/` 中的 `123456789` |
+| DOUBAN_USER_ID | 豆瓣用户ID | 打开豆瓣个人主页，URL格式为 `https://www.douban.com/people/用户名/?_i=用户ID`，其中 `?_i=` 后面的字符串即为用户ID，例如：`https://www.douban.com/people/JasonShane/?_i=4735911hkXkRh7` 中的 `4735911hkXkRh7` |
 | DOUBAN_API_KEY | 豆瓣API密钥 | 注册豆瓣开放平台开发者账号，创建应用后获取 |
 
 ### 2. Notion API配置
@@ -259,7 +259,7 @@ cron: '0 18 * * 1'  # UTC时间，对应北京时间每周一凌晨2点
 ## 常见问题
 
 ### Q: 如何获取豆瓣用户ID？
-A: 打开豆瓣个人主页，URL中的数字部分即为用户ID，例如：`https://www.douban.com/people/123456789/` 中的 `123456789`。
+A: 打开豆瓣个人主页，URL格式为 `https://www.douban.com/people/用户名/?_i=用户ID`，其中 `?_i=` 后面的字符串即为用户ID，例如：`https://www.douban.com/people/JasonShane/?_i=4735911hkXkRh7` 中的 `4735911hkXkRh7`。
 
 ### Q: 如何获取Notion集成密钥？
 A: 访问 [Notion集成页面](https://www.notion.so/my-integrations)，创建新集成并获取密钥。
