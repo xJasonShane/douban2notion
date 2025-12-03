@@ -47,88 +47,63 @@ douban2notion/
 
 ### 1. Fork项目到个人GitHub账号
 
-访问 [项目GitHub地址](https://github.com/yourusername/douban2notion)，点击右上角的 "Fork" 按钮，将项目复制到您的个人GitHub账号。
+1. 访问 [项目GitHub地址](https://github.com/yourusername/douban2notion)
+2. 点击右上角的 "Fork" 按钮，将项目复制到您的个人GitHub账号
+3. 等待Fork完成后，进入您的Fork仓库
 
-### 2. 配置GitHub Secrets
+### 2. 获取必要的配置信息
 
-在您的Fork仓库中，进入 `Settings > Secrets and variables > Actions`，添加以下Secrets：
+在配置GitHub Secrets之前，您需要准备以下信息：
 
-| Secret名称 | 说明 |
-| ---------- | ---- |
+| 配置项 | 说明 | 获取方式 |
+| ------ | ---- | -------- |
+| DOUBAN_USER_ID | 豆瓣用户ID | 打开豆瓣个人主页，URL中的数字部分即为用户ID，如：`https://www.douban.com/people/123456789/` 中的 `123456789` |
+| DOUBAN_API_KEY | 豆瓣API密钥 | 注册豆瓣开放平台开发者账号，创建应用后获取 |
+| NOTION_API_KEY | Notion集成密钥 | 访问 [Notion集成页面](https://www.notion.so/my-integrations)，创建新集成并获取 |
+| NOTION_DATABASE_ID | Notion数据库ID | 打开Notion数据库页面，点击右上角 `...` > `Copy link to view`，URL中 `?v=` 前面的部分 |
+
+### 3. 配置GitHub Secrets
+
+1. 在您的Fork仓库中，进入 `Settings > Secrets and variables > Actions`
+2. 点击 `New repository secret` 按钮，添加以下Secrets：
+
+| Secret名称 | 对应配置项 |
+| ---------- | ---------- |
 | DOUBAN_USER_ID | 豆瓣用户ID |
 | DOUBAN_API_KEY | 豆瓣API密钥 |
 | NOTION_API_KEY | Notion集成密钥 |
 | NOTION_DATABASE_ID | Notion数据库ID |
 
-### 3. 启动GitHub Actions工作流
+### 4. 启动GitHub Actions工作流
 
 1. 进入仓库的 `Actions` 页面
-2. 选择 `豆瓣电影同步到Notion` 工作流
+2. 您会看到 `豆瓣电影同步到Notion` 工作流
 3. 点击 `Run workflow` 按钮
-4. 选择同步状态（watched/已看, wish/想看, do/在看）
-5. 点击 `Run workflow` 执行同步
-
-### 4. 本地运行（可选）
-
-如果您想在本地运行项目，可按照以下步骤操作：
-
-#### 4.1 克隆项目
-
-```bash
-git clone https://github.com/yourusername/douban2notion.git
-cd douban2notion
-```
-
-#### 4.2 配置虚拟环境
-
-```bash
-# 创建虚拟环境
-python -m venv venv
-
-# 激活虚拟环境（Windows）
-venv\Scripts\activate
-
-# 激活虚拟环境（Linux/Mac）
-source venv/bin/activate
-
-# 安装依赖
-pip install -r requirements.txt
-```
-
-#### 4.3 配置环境变量
-
-复制 `.env.example` 文件为 `.env`，并填写相应的配置信息：
-
-```bash
-cp .env.example .env
-```
-
-编辑 `.env` 文件，填写以下信息：
-
-```
-# 豆瓣API配置
-DOUBAN_USER_ID=your_douban_user_id
-DOUBAN_API_KEY=your_douban_api_key
-
-# Notion API配置
-NOTION_API_KEY=your_notion_api_key
-NOTION_DATABASE_ID=your_notion_database_id
-
-# 同步配置
-SYNC_STATUS=watched  # 可选值：watched(已看), wish(想看), do(在看)
-```
-
-#### 4.4 运行同步脚本
-
-```bash
-python main.py
-```
+4. 在弹出的表单中，选择您要同步的电影状态：
+   - `watched`：已看电影
+   - `wish`：想看电影
+   - `do`：在看电影
+5. 点击 `Run workflow` 按钮执行同步
 
 ### 5. 查看同步结果
 
-- 同步完成后，您可以在Notion数据库中查看同步的电影信息
-- 同步日志会显示在GitHub Actions的工作流执行记录中
-- 本地运行时，日志会直接输出到控制台
+1. 工作流执行完成后，您可以在 `Actions` 页面查看详细的同步日志
+2. 打开您的Notion数据库，即可看到同步的电影信息
+3. 工作流会每天凌晨2点（北京时间）自动执行同步，无需手动操作
+
+### 6. 自定义同步频率（可选）
+
+如果您想调整同步频率，可以按照以下步骤操作：
+
+1. 在您的Fork仓库中，进入 `.github/workflows/sync.yml` 文件
+2. 点击右上角的编辑按钮
+3. 修改 `cron` 表达式来调整同步频率
+4. 点击 `Commit changes` 保存修改
+
+例如，将同步频率改为每周一凌晨2点：
+```yaml
+cron: '0 18 * * 1'  # UTC时间，对应北京时间每周一凌晨2点
+```
 
 ## 配置说明
 
