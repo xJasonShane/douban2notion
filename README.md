@@ -243,7 +243,9 @@ python main.py
 
 ## 许可证
 
-MIT License
+GNU General Public License v3.0
+
+详情请查看 [LICENSE](./LICENSE) 文件
 
 ## 贡献
 
