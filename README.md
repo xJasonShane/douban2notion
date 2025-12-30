@@ -1,309 +1,254 @@
 # 豆瓣电影同步到Notion
 
-一个用于将豆瓣电影信息一键同步到Notion笔记平台的工具，支持通过GitHub Actions定时同步用户的豆瓣电影已看、想看等电影详情信息。
+一个简单易用的工具，将豆瓣电影信息一键同步到Notion，支持GitHub Actions定时同步。
 
-## 功能特性
+## 核心特性
 
-- 🎬 支持同步豆瓣电影的已看、想看、在看列表
-- 🔄 支持全量同步和增量同步
+- 🎬 支持同步已看、想看、在看电影列表
+- � 无需豆瓣API密钥，直接爬取数据
+- � 支持全量同步和增量同步
 - 📊 详细的同步日志和统计
 - ⏰ 支持GitHub Actions定时执行
-- 🎨 自动创建Notion数据库，包含丰富的电影信息
-- 🖼️ 默认采用画廊视图展示，封面为电影海报
-- 📋 支持用户自定义选择需要同步的字段
+- 🎨 自动创建Notion数据库，包含电影海报
+- 📋 简化的配置流程，提供配置向导
 - 🔒 安全的环境变量管理
-- 📱 支持多平台运行
-
-## 技术栈
-
-- **开发语言**: Python 3.8+
-- **主要依赖**: 
-  - requests (HTTP请求)
-  - python-dotenv (环境变量管理)
-  - notion-client (Notion API客户端)
-  - beautifulsoup4 (HTML解析，备用方案)
-- **部署方式**: GitHub Actions
-
-## 项目结构
-
-```
-douban2notion/
-├── src/                     # 源代码目录
-│   ├── __init__.py
-│   ├── douban_api.py        # 豆瓣API调用模块
-│   ├── notion_api.py        # Notion API调用模块
-│   ├── sync_service.py      # 同步服务核心逻辑
-│   ├── models.py            # 数据模型定义
-│   └── config.py            # 配置管理
-├── CHANGELOG.md             # 更新日志
-├── .env.example             # 环境变量示例
-├── .github/
-│   └── workflows/
-│       └── sync.yml         # GitHub Actions工作流配置
-├── requirements.txt         # 依赖列表
-├── main.py                  # 主程序入口
-└── README.md                # 项目说明文档
-```
 
 ## 快速开始
 
-### 1. Fork项目到个人GitHub账号
+📖 **新用户？** 查看 [快速开始指南](./QUICKSTART.md) 5分钟快速部署
 
-1. 访问 [项目GitHub地址](https://github.com/yourusername/douban2notion)
-2. 点击右上角的 "Fork" 按钮，将项目复制到您的个人GitHub账号
-3. 等待Fork完成后，进入您的Fork仓库
+### 方式一：本地运行
 
-### 2. 获取必要的配置信息
+#### 1. 克隆项目
 
-在配置GitHub Secrets之前，您需要准备以下信息：
-
-| 配置项 | 说明 | 获取方式 |
-| ------ | ---- | -------- |
-| DOUBAN_USER_ID | 豆瓣用户ID | 打开豆瓣个人主页，URL格式为 `https://www.douban.com/people/用户名/?_i=用户ID`，其中 `?_i=` 后面的字符串即为用户ID，例如：`https://www.douban.com/people/username/?_i=1234567890` 中的 `1234567890` |
-| DOUBAN_API_KEY | 豆瓣API密钥 | 注册豆瓣开放平台开发者账号，创建应用后获取 |
-| NOTION_API_KEY | Notion集成密钥 | 访问 [Notion集成页面](https://www.notion.so/my-integrations)，创建新集成并获取 |
-| NOTION_DATABASE_ID | Notion数据库ID | 打开Notion数据库页面，点击右上角 `...` > `Copy link to view`，URL中 `?v=` 前面的部分 |
-
-### 3. 配置GitHub Secrets
-
-1. 在您的Fork仓库中，进入 `Settings > Secrets and variables > Actions`
-2. 点击 `New repository secret` 按钮，添加以下Secrets：
-
-| Secret名称 | 对应配置项 | 说明 |
-| ---------- | ---------- | ---- |
-| DOUBAN_USER_ID | 豆瓣用户ID | 豆瓣个人主页URL中 `?_i=` 后面的字符串，例如：`https://www.douban.com/people/username/?_i=1234567890` 中的 `1234567890` |
-| DOUBAN_API_KEY | 豆瓣API密钥 | 豆瓣开放平台开发者账号获取 |
-| NOTION_API_KEY | Notion集成密钥 | Notion集成页面创建获取 |
-| NOTION_DATABASE_ID | Notion数据库ID | Notion数据库页面URL中获取 |
-| CUSTOM_FIELDS | 自定义字段 | 可选，指定需要同步的字段，逗号分隔，默认为所有字段 |
-
-### 4. 启动GitHub Actions工作流
-
-1. 进入仓库的 `Actions` 页面
-2. 您会看到 `豆瓣电影同步到Notion` 工作流
-3. 点击 `Run workflow` 按钮
-4. 在弹出的表单中，选择您要同步的电影状态：
-   - `watched`：已看电影
-   - `wish`：想看电影
-   - `do`：在看电影
-5. 点击 `Run workflow` 按钮执行同步
-
-### 5. 查看同步结果
-
-1. 工作流执行完成后，您可以在 `Actions` 页面查看详细的同步日志
-2. 打开您的Notion数据库，即可看到同步的电影信息
-3. 工作流会每天凌晨2点（北京时间）自动执行同步，无需手动操作
-
-### 6. 自定义同步频率（可选）
-
-如果您想调整同步频率，可以按照以下步骤操作：
-
-1. 在您的Fork仓库中，进入 `.github/workflows/sync.yml` 文件
-2. 点击右上角的编辑按钮
-3. 修改 `cron` 表达式来调整同步频率
-4. 点击 `Commit changes` 保存修改
-
-例如，将同步频率改为每周一凌晨2点：
-```yaml
-cron: '0 18 * * 1'  # UTC时间，对应北京时间每周一凌晨2点
+```bash
+git clone https://github.com/yourusername/douban2notion.git
+cd douban2notion
 ```
 
-## 配置说明
+#### 2. 创建虚拟环境
 
-### 1. 豆瓣API配置
+```bash
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# Linux/Mac
+source venv/bin/activate
+```
 
-| 配置项 | 说明 | 获取方式 |
-| ------ | ---- | -------- |
-| DOUBAN_USER_ID | 豆瓣用户ID | 打开豆瓣个人主页，URL格式为 `https://www.douban.com/people/用户名/?_i=用户ID`，其中 `?_i=` 后面的字符串即为用户ID，例如：`https://www.douban.com/people/JasonShane/?_i=4735911hkXkRh7` 中的 `4735911hkXkRh7` |
-| DOUBAN_API_KEY | 豆瓣API密钥 | 注册豆瓣开放平台开发者账号，创建应用后获取 |
-
-### 2. Notion API配置
-
-| 配置项 | 说明 | 获取方式 |
-| ------ | ---- | -------- |
-| NOTION_API_KEY | Notion集成密钥 | 访问 [Notion集成页面](https://www.notion.so/my-integrations)，创建新集成并获取 |
-| NOTION_DATABASE_ID | Notion数据库ID | 打开Notion数据库页面，点击右上角 `...` > `Copy link to view`，URL中 `?v=` 前面的部分 |
-
-### 3. 同步配置
-
-| 配置项 | 说明 | 可选值 |
-| ------ | ---- | ------ |
-| SYNC_STATUS | 同步状态 | watched(已看), wish(想看), do(在看) |
-
-### 4. 自定义字段配置
-
-| 配置项 | 说明 | 示例值 |
-| ------ | ---- | ------ |
-| CUSTOM_FIELDS | 需要同步的字段，逗号分隔 | 电影名称,豆瓣ID,状态,评分,海报 |
-
-#### 可用字段列表
-
-| 字段名称 | 字段类型 | 描述 |
-| -------- | -------- | ---- |
-| 电影名称 | 标题 | 电影中文名称 |
-| 原始名称 | 文本 | 电影原始名称 |
-| 豆瓣ID | 文本 | 豆瓣电影唯一标识 |
-| 状态 | 选择 | 已看/想看/在看 |
-| 评分 | 数字 | 用户评分(1-10) |
-| 上映年份 | 数字 | 电影上映年份 |
-| 类型 | 多选 | 电影类型 |
-| 导演 | 文本 | 电影导演 |
-| 演员 | 文本 | 主要演员 |
-| 地区 | 多选 | 制作地区 |
-| 上映日期 | 日期 | 上映日期 |
-| 时长 | 数字 | 电影时长(分钟) |
-| 豆瓣链接 | URL | 豆瓣电影页面链接 |
-| 海报 | 文件 | 电影海报图片 |
-| 简介 | 文本 | 电影简介 |
-| 用户评论 | 文本 | 用户评论 |
-| 评分日期 | 日期 | 用户评分日期 |
-
-#### 配置示例
-
-1. **同步所有字段**（默认）：
-   ```
-   CUSTOM_FIELDS=电影名称,原始名称,豆瓣ID,状态,评分,上映年份,类型,导演,演员,地区,上映日期,时长,豆瓣链接,海报,简介,用户评论,评分日期
-   ```
-
-2. **只同步核心字段**：
-   ```
-   CUSTOM_FIELDS=电影名称,豆瓣ID,状态,评分,海报,导演
-   ```
-
-3. **同步特定字段**：
-   ```
-   CUSTOM_FIELDS=电影名称,状态,评分,类型,地区,海报
-   ```
-
-## GitHub Actions配置
-
-### 1. 手动触发同步
-
-在GitHub仓库的 `Actions > 豆瓣电影同步到Notion > Run workflow` 中可以手动触发同步，并选择同步状态。
-
-### 2. 定时同步
-
-工作流默认每天凌晨2点（北京时间）自动执行同步，同步状态默认为 `watched`（已看电影）。
-
-您可以修改 `.github/workflows/sync.yml` 文件中的 `cron` 表达式来调整同步频率。
-
-## 画廊视图使用说明
-
-### 1. 查看画廊视图
-
-同步完成后，打开您的Notion数据库页面，您会看到系统自动创建了一个名为"画廊视图"的视图。
-
-### 2. 画廊视图特点
-
-- 🖼️ **封面显示**：每个电影卡片的封面自动设置为电影海报
-- 📊 **信息展示**：卡片中显示电影名称、状态、评分等核心信息
-- 🔍 **快速浏览**：方便您快速浏览和查找电影
-- 📱 **响应式设计**：支持不同屏幕尺寸
-
-### 3. 切换视图
-
-如果您想切换到其他视图，可以点击数据库顶部的视图名称，选择其他视图或创建新视图。
-
-### 4. 自定义画廊视图
-
-您可以根据自己的需求自定义画廊视图：
-
-1. 点击视图名称右侧的 `...` 按钮
-2. 选择 `Gallery settings`
-3. 在弹出的设置面板中，您可以：
-   - 调整卡片大小
-   - 选择要显示的字段
-   - 更改封面设置
-   - 添加过滤条件
-   - 设置排序方式
-
-### 5. 封面显示效果
-
-- 系统默认使用电影海报作为卡片封面
-- 如果电影没有海报，会显示默认封面
-- 封面会自动裁剪为合适的尺寸
-- 您可以在画廊设置中调整封面显示方式
-
-## Notion数据库字段说明
-
-同步到Notion数据库的电影包含以下字段：
-
-| 字段名称 | 字段类型 | 描述 |
-| -------- | -------- | ---- |
-| 电影名称 | 标题 | 电影中文名称 |
-| 原始名称 | 文本 | 电影原始名称 |
-| 豆瓣ID | 文本 | 豆瓣电影唯一标识 |
-| 状态 | 选择 | 已看/想看/在看 |
-| 评分 | 数字 | 用户评分(1-10) |
-| 上映年份 | 数字 | 电影上映年份 |
-| 类型 | 多选 | 电影类型 |
-| 导演 | 文本 | 电影导演 |
-| 演员 | 文本 | 主要演员 |
-| 地区 | 多选 | 制作地区 |
-| 上映日期 | 日期 | 上映日期 |
-| 时长 | 数字 | 电影时长(分钟) |
-| 豆瓣链接 | URL | 豆瓣电影页面链接 |
-| 海报 | 文件 | 电影海报图片 |
-| 简介 | 文本 | 电影简介 |
-| 用户评论 | 文本 | 用户评论 |
-| 评分日期 | 日期 | 用户评分日期 |
-
-## 注意事项
-
-1. **API限制**: 豆瓣API有访问频率限制，请合理设置同步频率
-2. **数据隐私**: 确保环境变量中的密钥安全，不要泄露给他人
-3. **网络连接**: 确保运行环境有稳定的网络连接
-4. **Notion权限**: 确保Notion集成有足够的权限访问和修改数据库
-5. **首次同步**: 首次同步可能需要较长时间，取决于电影数量
-
-## 常见问题
-
-### Q: 如何获取豆瓣用户ID？
-A: 打开豆瓣个人主页，URL格式为 `https://www.douban.com/people/用户名/?_i=用户ID`，其中 `?_i=` 后面的字符串即为用户ID，例如：`https://www.douban.com/people/JasonShane/?_i=4735911hkXkRh7` 中的 `4735911hkXkRh7`。
-
-### Q: 如何获取Notion集成密钥？
-A: 访问 [Notion集成页面](https://www.notion.so/my-integrations)，创建新集成并获取密钥。
-
-### Q: 如何获取Notion数据库ID？
-A: 打开Notion数据库页面，点击右上角的 `...` > `Copy link to view`，URL中 `?v=` 前面的部分即为数据库ID。
-
-### Q: 同步失败怎么办？
-A: 检查日志中的错误信息，常见问题包括：
-   - 环境变量配置错误
-   - API密钥无效
-   - 网络连接问题
-   - Notion数据库权限不足
-
-### Q: 可以同步其他类型的内容吗？
-A: 当前版本仅支持电影同步，后续版本可能会支持书籍、音乐等其他内容类型。
-
-## 开发说明
-
-### 安装依赖
+#### 3. 安装依赖
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 运行测试
+#### 4. 配置环境变量
+
+运行配置向导：
 
 ```bash
-# 目前暂无测试用例
+python setup.py
 ```
 
-### 代码结构
+按照提示输入配置信息：
 
-- **src/douban_api.py**: 豆瓣API调用模块，负责获取用户电影信息
-- **src/notion_api.py**: Notion API调用模块，负责管理Notion数据库和同步数据
-- **src/sync_service.py**: 同步服务核心逻辑，协调豆瓣和Notion之间的数据同步
-- **src/models.py**: 数据模型定义，定义电影数据结构
-- **src/config.py**: 配置管理，加载和验证环境变量
-- **main.py**: 主程序入口，启动同步服务
+- **豆瓣用户名**：豆瓣个人主页URL中的用户名，例如 `https://movie.douban.com/people/username/` 中的 `username`
+- **Notion集成密钥**：访问 [Notion集成页面](https://www.notion.so/my-integrations) 创建集成并获取
+- **数据库配置**：选择使用现有数据库或自动创建新数据库
+- **同步状态**：选择要同步的电影类型（已看/想看/在看）
+- **增量同步**：选择是否只同步新电影
 
-## 贡献指南
+#### 5. 开始同步
+
+```bash
+python main.py
+```
+
+### 方式二：GitHub Actions部署
+
+#### 1. Fork项目
+
+访问项目GitHub页面，点击右上角 "Fork" 按钮
+
+#### 2. 获取配置信息
+
+| 配置项 | 获取方式 |
+| ------ | -------- |
+| DOUBAN_USER_ID | 豆瓣个人主页URL中的用户名 |
+| NOTION_API_KEY | [Notion集成页面](https://www.notion.so/my-integrations) 创建集成获取 |
+| NOTION_DATABASE_ID | Notion数据库页面URL中获取（32位字符） |
+| NOTION_PARENT_PAGE_ID | Notion父页面URL中获取（32位字符，用于自动创建数据库） |
+
+#### 3. 配置GitHub Secrets
+
+在Fork仓库中，进入 `Settings > Secrets and variables > Actions`，添加以下Secrets：
+
+| Secret名称 | 说明 |
+| ---------- | ---- |
+| DOUBAN_USER_ID | 豆瓣用户名 |
+| NOTION_API_KEY | Notion集成密钥 |
+| NOTION_DATABASE_ID | Notion数据库ID（可选） |
+| NOTION_PARENT_PAGE_ID | Notion父页面ID（可选，用于自动创建数据库） |
+
+#### 4. 手动触发同步
+
+进入仓库的 `Actions > 豆瓣电影同步到Notion > Run workflow`，选择同步状态和是否增量同步，点击运行。
+
+#### 5. 定时同步
+
+工作流默认每天凌晨2点（北京时间）自动执行同步。如需修改，编辑 `.github/workflows/sync.yml` 中的 `cron` 表达式。
+
+## 配置说明
+
+### 环境变量
+
+| 变量名 | 必需 | 说明 | 默认值 |
+| ------ | ---- | ---- | ------ |
+| DOUBAN_USER_ID | 是 | 豆瓣用户名 | - |
+| NOTION_API_KEY | 是 | Notion集成密钥 | - |
+| NOTION_DATABASE_ID | 否 | Notion数据库ID | - |
+| NOTION_PARENT_PAGE_ID | 否 | Notion父页面ID | - |
+| SYNC_STATUS | 否 | 同步状态(watched/wish/do) | watched |
+| INCREMENTAL_SYNC | 否 | 增量同步(true/false) | false |
+
+### 数据库配置说明
+
+**选项1：使用现有数据库**
+- 配置 `NOTION_DATABASE_ID`
+- 确保数据库包含以下字段：电影名称、豆瓣ID、状态、评分、上映年份、导演、地区、豆瓣链接、海报、简介、用户评论、评分日期
+
+**选项2：自动创建数据库**
+- 配置 `NOTION_PARENT_PAGE_ID`
+- 程序会自动在指定页面下创建数据库
+- 确保Notion集成已添加到父页面
+
+## Notion数据库字段
+
+| 字段名称 | 类型 | 说明 |
+| -------- | ---- | ---- |
+| 电影名称 | 标题 | 电影中文名称 |
+| 豆瓣ID | 文本 | 豆瓣电影唯一标识 |
+| 状态 | 选择 | 已看/想看/在看 |
+| 评分 | 数字 | 用户评分(1-10) |
+| 上映年份 | 数字 | 电影上映年份 |
+| 导演 | 文本 | 电影导演 |
+| 地区 | 多选 | 制作地区 |
+| 豆瓣链接 | URL | 豆瓣电影页面链接 |
+| 海报 | 文件 | 电影海报图片 |
+| 简介 | 文本 | 电影简介 |
+| 用户评论 | 文本 | 用户评论 |
+| 评分日期 | 日期 | 用户评分日期 |
+
+## 使用技巧
+
+### 1. 创建画廊视图
+
+同步完成后，在Notion数据库中创建画廊视图：
+1. 点击数据库右上角 `+` 添加视图
+2. 选择 "Gallery" 类型
+3. 设置封面属性为 "海报"
+4. 调整卡片大小和显示字段
+
+### 2. 增量同步
+
+设置 `INCREMENTAL_SYNC=true` 可以只同步新电影，避免重复同步已有电影，提高同步效率。
+
+### 3. 同步多种状态
+
+可以分别同步已看、想看、在看电影：
+```bash
+# 同步已看电影
+SYNC_STATUS=watched python main.py
+
+# 同步想看电影
+SYNC_STATUS=wish python main.py
+
+# 同步在看电影
+SYNC_STATUS=do python main.py
+```
+
+## 常见问题
+
+### Q: 如何获取豆瓣用户名？
+A: 打开豆瓣个人主页，URL格式为 `https://movie.douban.com/people/username/`，其中 `username` 就是用户名。
+
+### Q: 如何获取Notion集成密钥？
+A: 访问 [Notion集成页面](https://www.notion.so/my-integrations)，点击 "New integration"，填写名称并提交，复制生成的密钥（secret_开头）。
+
+### Q: 如何获取Notion页面/数据库ID？
+A: 打开Notion页面或数据库，URL中包含32位字符的ID，例如：`https://www.notion.so/username/Page-Name-32位ID`。
+
+### Q: 同步失败怎么办？
+A: 检查以下几点：
+- 确保配置信息正确
+- 确保Notion集成已添加到对应页面
+- 检查网络连接
+- 查看日志中的错误信息
+
+### Q: 如何更新已有电影？
+A: 使用全量同步（`INCREMENTAL_SYNC=false`），程序会自动检测并更新已有电影。
+
+### Q: 可以同步其他类型的内容吗？
+A: 当前版本仅支持电影同步，后续版本可能会支持书籍、音乐等内容。
+
+## 技术栈
+
+- **Python 3.8+**
+- **requests** - HTTP请求
+- **beautifulsoup4** - HTML解析
+- **python-dotenv** - 环境变量管理
+- **notion-client** - Notion API客户端
+
+## 项目结构
+
+```
+douban2notion/
+├── src/
+│   ├── __init__.py
+│   ├── config.py          # 配置管理
+│   ├── douban_api.py      # 豆瓣爬虫
+│   ├── models.py          # 数据模型
+│   ├── notion_api.py      # Notion API
+│   └── sync_service.py    # 同步服务
+├── .github/
+│   └── workflows/
+│       └── sync.yml       # GitHub Actions工作流
+├── main.py                # 主程序入口
+├── setup.py               # 配置向导
+├── requirements.txt       # 依赖列表
+└── README.md             # 项目说明
+```
+
+## 开发说明
+
+### 本地开发
+
+```bash
+# 激活虚拟环境
+venv\Scripts\activate
+
+# 安装依赖
+pip install -r requirements.txt
+
+# 运行配置向导
+python setup.py
+
+# 运行同步
+python main.py
+```
+
+### 调试模式
+
+修改 `src/config.py` 中的日志级别为 `DEBUG` 可以查看更详细的日志信息。
+
+## 许可证
+
+MIT License
+
+## 贡献
 
 欢迎提交Issue和Pull Request！
 
 ## 更新日志
 
-详情请查看 [CHANGELOG.md](./CHANGELOG.md) 文件。
+详情请查看 [CHANGELOG.md](./CHANGELOG.md)
